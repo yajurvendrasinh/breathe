@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Anton", sans-serif;
+  --font-sans: "Hanken Grotesk", sans-serif;
+
+  --color-nike-black: #111111;
+  --color-nike-white: #FFFFFF;
+  --color-snow: #FAFAFA;
+  --color-light-gray: #F5F5F5;
+  --color-hover-gray: #E5E5E5;
+  --color-border-subtle: #CACACB;
+  --color-text-secondary: #707072;
+}
+
+@layer base {
+  body {
+    @apply bg-nike-white text-nike-black font-sans antialiased;
+  }
+}
+
+.font-display-hero {
+  font-family: var(--font-display);
+  font-size: 96px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.font-display-hero-mobile {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
