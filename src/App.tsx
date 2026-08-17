@@ -144,8 +144,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.3 }}
-                className="font-display-hero-mobile text-text-secondary whitespace-nowrap"
-                style={{ fontSize: '40px' }}
+                className="font-medium text-text-secondary font-tap-to-start whitespace-nowrap tracking-[0.2em]"
+                style={{ fontSize: '14px' }}
               >
                 TAP TO START
               </motion.div>

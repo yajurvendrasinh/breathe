@@ -22,14 +22,22 @@
 
 .font-display-hero {
   font-family: var(--font-display);
-  font-size: 96px;
+  font-size: 80px;
   line-height: 0.9;
   text-transform: uppercase;
 }
 
 .font-display-hero-mobile {
   font-family: var(--font-display);
-  font-size: 48px;
+  font-size: 32px;
   line-height: 0.9;
   text-transform: uppercase;
 }
+
+@media (max-width: 820px) {
+  .font-tap-to-start {
+    font-size: 13px;
+  letter-spacing: 0.06em ;
+}
+}
+
