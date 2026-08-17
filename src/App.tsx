@@ -105,7 +105,7 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen bg-nike-white select-none overflow-hidden">
       {/* Header */}
-      <header className="h-16 flex items-center justify-center px-4 border-b border-hover-gray bg-nike-white z-50">
+      <header className="h-16 flex items-center justify-center px-4 bg-nike-white z-50">
         <div className="w-full" />
       </header>
 
