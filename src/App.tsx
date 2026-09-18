@@ -3,7 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  type PointerEvent as ReactPointerEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 type Phase = "INHALE" | "HOLD" | "EXHALE";
@@ -58,6 +64,12 @@ export default function App() {
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const phaseStartTime = useRef<number | null>(null);
+  const navigationDragStart = useRef<number | null>(null);
+  const navigationDidDrag = useRef(false);
+  const navigationPointerCapture = useRef<HTMLElement | null>(null);
+  const [navigationDragProgress, setNavigationDragProgress] = useState(0);
+  const [isNavigationDragging, setIsNavigationDragging] = useState(false);
+  const navigationDragThreshold = 24;
 
   const currentPhase = activeMode.phases[currentPhaseIndex];
 
@@ -101,6 +113,89 @@ export default function App() {
     setIsActive(false);
     setActiveMode(mode);
   };
+
+  const handleNavigationPointerDown = (
+    event: ReactPointerEvent<HTMLElement>,
+  ) => {
+    navigationDragStart.current = event.clientX;
+    navigationDidDrag.current = false;
+    setNavigationDragProgress(0);
+    const pointerTarget =
+      event.target instanceof HTMLElement ? event.target : event.currentTarget;
+    navigationPointerCapture.current = pointerTarget;
+    pointerTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleNavigationPointerMove = (
+    event: ReactPointerEvent<HTMLElement>,
+  ) => {
+    if (navigationDragStart.current === null) return;
+
+    const dragDistance = event.clientX - navigationDragStart.current;
+    if (Math.abs(dragDistance) < navigationDragThreshold) return;
+
+    navigationDidDrag.current = true;
+    setIsNavigationDragging(true);
+    const activeModeIndex = MODES.findIndex(
+      (mode) => mode.id === activeMode.id,
+    );
+    const rawDragProgress =
+      dragDistance / (event.currentTarget.clientWidth / MODES.length);
+    const minDragProgress = -activeModeIndex;
+    const maxDragProgress = MODES.length - 1 - activeModeIndex;
+    setNavigationDragProgress(
+      Math.max(
+        minDragProgress,
+        Math.min(maxDragProgress, rawDragProgress),
+      ),
+    );
+  };
+
+  const finishNavigationGesture = (event: ReactPointerEvent<HTMLElement>) => {
+    if (
+      event.type !== "pointercancel" &&
+      navigationDragStart.current !== null &&
+      navigationDidDrag.current &&
+      Math.abs(event.clientX - navigationDragStart.current) >=
+        navigationDragThreshold
+    ) {
+      const dragDistance = event.clientX - navigationDragStart.current;
+      const direction = dragDistance > 0 ? 1 : -1;
+      const currentIndex = MODES.findIndex((mode) => mode.id === activeMode.id);
+      const nextIndex = Math.max(
+        0,
+        Math.min(MODES.length - 1, currentIndex + direction),
+      );
+
+      if (nextIndex !== currentIndex) {
+        handleModeChange(MODES[nextIndex]);
+      }
+    }
+
+    navigationDragStart.current = null;
+    setNavigationDragProgress(0);
+    setIsNavigationDragging(false);
+    if (navigationPointerCapture.current?.hasPointerCapture(event.pointerId)) {
+      navigationPointerCapture.current.releasePointerCapture(event.pointerId);
+    }
+    navigationPointerCapture.current = null;
+  };
+
+  const handleNavigationClick = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    mode: BreathingMode,
+  ) => {
+    if (navigationDidDrag.current) {
+      event.preventDefault();
+      navigationDidDrag.current = false;
+      return;
+    }
+
+    handleModeChange(mode);
+  };
+
+  const activeModeIndex = MODES.findIndex((mode) => mode.id === activeMode.id);
+  const indicatorPosition = activeModeIndex + navigationDragProgress;
 
   return (
     <div className="flex flex-col min-h-screen bg-nike-white select-none overflow-hidden">
@@ -174,14 +269,39 @@ export default function App() {
 
       {/* Navigator */}
       <nav className="fixed bottom-12 left-1/2 -translate-x-1/2 px-6 w-full max-w-md z-40">
-        <div className="bg-light-gray p-1 rounded-full flex gap-1 items-center justify-between border border-hover-gray">
+        <div
+          className={`relative bg-light-gray p-1 rounded-full flex gap-1 items-center justify-between border border-hover-gray touch-pan-y select-none ${
+            isNavigationDragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+          onPointerDown={handleNavigationPointerDown}
+          onPointerMove={handleNavigationPointerMove}
+          onPointerUp={finishNavigationGesture}
+          onPointerCancel={finishNavigationGesture}
+        >
+          <div
+            aria-hidden="true"
+            className={`absolute top-1 bottom-1 left-1 rounded-full bg-nike-black shadow-sm pointer-events-none ${
+              isNavigationDragging
+                ? ""
+                : "transition-transform duration-300 ease-out"
+            }`}
+            style={{
+              width: "calc((100% - 1rem) / 3)",
+              transform: `translateX(calc(${indicatorPosition * 100}% + ${
+                indicatorPosition * 0.25
+              }rem))`,
+            }}
+          />
           {MODES.map((mode) => (
             <button
               key={mode.id}
-              onClick={() => handleModeChange(mode)}
-              className={`flex-1 py-3 px-2 rounded-full font-medium text-xs uppercase tracking-tight transition-all duration-300 ${
+              onClick={(event: ReactMouseEvent<HTMLButtonElement>) =>
+                handleNavigationClick(event, mode)
+              }
+              aria-selected={activeMode.id === mode.id}
+              className={`relative z-10 flex-1 py-3 px-2 rounded-full font-medium text-xs uppercase tracking-tight transition-colors duration-300 ${
                 activeMode.id === mode.id
-                  ? "bg-nike-black text-nike-white shadow-sm"
+                  ? "text-nike-white"
                   : "text-text-secondary hover:text-nike-black"
               }`}
             >
