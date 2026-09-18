@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -6,11 +6,11 @@
   --font-sans: "Hanken Grotesk", sans-serif;
 
   --color-nike-black: #111111;
-  --color-nike-white: #FFFFFF;
-  --color-snow: #FAFAFA;
-  --color-light-gray: #F5F5F5;
-  --color-hover-gray: #E5E5E5;
-  --color-border-subtle: #CACACB;
+  --color-nike-white: #ffffff;
+  --color-snow: #fafafa;
+  --color-light-gray: #f5f5f5;
+  --color-hover-gray: #e5e5e5;
+  --color-border-subtle: #cacacb;
   --color-text-secondary: #707072;
 }
 
@@ -37,7 +37,8 @@
 @media (max-width: 820px) {
   .font-tap-to-start {
     font-size: 13px;
-  letter-spacing: 0.06em ;
-}
+    letter-spacing: 0.06em;
+  }
 }
 
+/* test */
