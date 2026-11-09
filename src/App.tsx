@@ -144,10 +144,7 @@ export default function App() {
     const minDragProgress = -activeModeIndex;
     const maxDragProgress = MODES.length - 1 - activeModeIndex;
     setNavigationDragProgress(
-      Math.max(
-        minDragProgress,
-        Math.min(maxDragProgress, rawDragProgress),
-      ),
+      Math.max(minDragProgress, Math.min(maxDragProgress, rawDragProgress)),
     );
   };
 
@@ -239,6 +236,7 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.3 }}
+                transition={{ ease: [0.42, 0, 0.58, 1] }}
                 className="font-medium text-text-secondary font-tap-to-start whitespace-nowrap tracking-[0.2em]"
                 style={{ fontSize: "14px" }}
               >
@@ -252,8 +250,18 @@ export default function App() {
                   key={currentPhase.type}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{
+                    opacity: 0,
+                    scale: 1.1,
+                    transition: {
+                      duration: 0.3,
+                      ease: [0.42, 0, 1, 1],
+                    },
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                   className="font-display-hero-mobile text-nike-black"
                 >
                   {currentPhase.type}
@@ -333,6 +341,7 @@ function ShapeRenderer({
 
   const totalSteps = phases.length;
   const isCoherent = shape === "circle" && phases.length === 2;
+  const easedProgress = easeInOut(progress);
 
   // Get the path definition based on shape
   // Note: SVG is rotated -90deg, so we adjust starting points accordingly
@@ -364,10 +373,14 @@ function ShapeRenderer({
 
   const getScale = () => {
     if (!isActive) return 1;
-    const peak = 1.3;
+    const peak = 1.32;
     const base = 1.0;
-    if (currentPhase.type === "INHALE") return base + progress * (peak - base);
-    if (currentPhase.type === "EXHALE") return peak - progress * (peak - base);
+    if (currentPhase.type === "INHALE") {
+      return base + easedProgress * (peak - base);
+    }
+    if (currentPhase.type === "EXHALE") {
+      return peak - easedProgress * (peak - base);
+    }
     if (currentPhase.type === "HOLD") {
       const prevPhase = phases[(phaseIndex - 1 + totalSteps) % totalSteps];
       return prevPhase.type === "INHALE" ? peak : base;
@@ -414,7 +427,7 @@ function ShapeRenderer({
   return (
     <motion.div
       animate={{ scale }}
-      transition={{ duration: 0.3, ease: "linear" }}
+      transition={{ duration: 0 }}
       className="w-full h-full relative p-4 flex items-center justify-center"
     >
       <svg
@@ -471,4 +484,31 @@ function ShapeRenderer({
       </svg>
     </motion.div>
   );
+}
+
+function easeInOut(progress: number) {
+  const x = Math.min(1, Math.max(0, progress));
+  if (x === 0 || x === 1) return x;
+
+  let lower = 0;
+  let upper = 1;
+  let t = x;
+
+  for (let iteration = 0; iteration < 16; iteration += 1) {
+    t = (lower + upper) / 2;
+    const inverseT = 1 - t;
+    const bezierX =
+      3 * inverseT * inverseT * t * 0.42 +
+      3 * inverseT * t * t * 0.58 +
+      t * t * t;
+
+    if (bezierX < x) {
+      lower = t;
+    } else {
+      upper = t;
+    }
+  }
+
+  const inverseT = 1 - t;
+  return 3 * inverseT * t * t + t * t * t;
 }
